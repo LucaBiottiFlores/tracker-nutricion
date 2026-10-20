@@ -44,6 +44,8 @@ window.FOODS = [
   { n:"Merluza (cocida)", cat:"Pescados", kcal:90, prot:19, carb:0, fat:1, fiber:0, sugar:0, sodium:80, satfat:0.2, calcium:15, iron:0.4, potassium:380, vitc:0, u:{porcion:150} },
   { n:"Atún en agua (lata)", cat:"Pescados", kcal:116, prot:26, carb:0, fat:1, fiber:0, sugar:0, sodium:340, satfat:0.3, calcium:12, iron:1.3, potassium:230, vitc:0, u:{lata:112, porcion:112} },
   { n:"Atún en aceite (lata)", cat:"Pescados", kcal:198, prot:29, carb:0, fat:8, fiber:0, sugar:0, sodium:400, satfat:1.5, calcium:12, iron:1.4, potassium:200, vitc:0, u:{lata:112, porcion:112} },
+  { n:"Caballa Acuenta (lata, escurrida)", cat:"Pescados", kcal:200, prot:19, carb:0, fat:13, fiber:0, sugar:0, sodium:300, satfat:3.5, calcium:12, iron:1.6, potassium:314, vitc:0, u:{lata:280, porcion:100} },
+  { n:"Atún Van Camp's (lata, escurrida)", cat:"Pescados", kcal:116, prot:26, carb:0, fat:1, fiber:0, sugar:0, sodium:340, satfat:0.3, calcium:12, iron:1.3, potassium:230, vitc:0, u:{lata:92, porcion:92} },
 
   // ---- Legumbres (cocidas) ----
   { n:"Porotos (cocidos)", cat:"Legumbres", kcal:127, prot:8.7, carb:22.8, fat:0.5, fiber:6.4, sugar:0.3, sodium:2, satfat:0.1, calcium:28, iron:2.9, potassium:400, vitc:0, u:{taza:170, porcion:200} },
