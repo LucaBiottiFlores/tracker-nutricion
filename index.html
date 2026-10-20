@@ -116,8 +116,21 @@
         <button type="submit" class="primary">Guardar objetivos</button>
       </form>
 
-      <h2>Respaldo</h2>
-      <p class="hint">Tus datos viven solo en este navegador. Exporta para respaldar o para compartírmelos.</p>
+      <h2>Cuenta y sincronización</h2>
+      <p class="hint" id="authStatus">Sin conexión: tus datos quedan solo en este navegador.</p>
+      <form id="authForm" autocomplete="off">
+        <label>Correo
+          <input type="email" id="authEmail" placeholder="tucorreo@gmail.com" inputmode="email" />
+        </label>
+        <div class="btn-row">
+          <button type="submit" class="primary" id="signInBtn">Conectar / sincronizar</button>
+          <button type="button" class="ghost" id="signOutBtn" hidden>Salir</button>
+        </div>
+      </form>
+      <p class="hint">Conecta con tu correo para guardar todo en la nube y ver lo mismo en tu PC y tu celular. También puedes seguir usándolo sin cuenta (modo local).</p>
+
+      <h2>Respaldo local</h2>
+      <p class="hint">Si usas modo local, exporta para respaldar o para compartírmelos.</p>
       <div class="btn-row">
         <button type="button" id="exportBtn" class="ghost">Exportar (descargar)</button>
         <button type="button" id="copyBtn" class="ghost">Copiar datos</button>
@@ -129,6 +142,8 @@
 
   <div id="toast" class="toast" hidden></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
   <script src="js/foods.js"></script>
   <script src="js/app.js"></script>
 </body>

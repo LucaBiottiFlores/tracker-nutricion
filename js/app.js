@@ -14,6 +14,29 @@
     ["potassium", "Potasio (mg)"], ["vitc", "Vitamina C (mg)"]
   ];
 
+  // ---- Supabase ----
+  var SB_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "";
+  var SB_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "";
+  function looksReal() {
+    if (!SB_URL || !SB_KEY) return false;
+    if (/YOUR|PASTE|EXAMPLE|TU_PROYECTO/i.test(SB_URL + " " + SB_KEY)) return false;
+    return /^https:\/\/.+\.supabase\.co/.test(SB_URL) && /^eyJ/.test(SB_KEY);
+  }
+  var sb = null;
+  if (window.supabase && looksReal()) {
+    try {
+      sb = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          flowType: "pkce"
+        }
+      });
+    } catch (e) { sb = null; }
+  }
+  var currentUser = null;
+
   function dateKey(d) {
     var m = String(d.getMonth() + 1).padStart(2, "0");
     var day = String(d.getDate()).padStart(2, "0");
@@ -70,11 +93,13 @@
     chartWrap: $("chartWrap"), weightChart: $("weightChart"), bfChart: $("bfChart"),
     targetForm: $("targetForm"), tKcal: $("tKcal"), tProt: $("tProt"), tCarb: $("tCarb"), tFat: $("tFat"), tHeight: $("tHeight"),
     exportBtn: $("exportBtn"), copyBtn: $("copyBtn"), importBtn: $("importBtn"), importFile: $("importFile"),
+    authStatus: $("authStatus"), authForm: $("authForm"), authEmail: $("authEmail"), signOutBtn: $("signOutBtn"),
     toast: $("toast")
   };
 
   function save() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    pushRemote();
   }
 
   function toast(msg) {
@@ -430,6 +455,119 @@
     reader.readAsText(file);
   }
 
+  // ---- Sincronización Supabase ----
+  function pushRemote() {
+    if (!sb || !currentUser) return;
+    var payload = { user_id: currentUser.id, data: state, updated_at: new Date().toISOString() };
+    sb.from("nutrition_state").upsert(payload, { onConflict: "user_id" })
+      .then(function (r) { if (r.error) console.warn("sync push:", r.error.message); })
+      .catch(function (e) { console.warn("sync push:", e); });
+  }
+
+  function fetchRemote() {
+    return sb.from("nutrition_state")
+      .select("data")
+      .eq("user_id", currentUser.id)
+      .maybeSingle()
+      .then(function (r) {
+        if (r.error) throw r.error;
+        return r.data ? r.data.data : null;
+      });
+  }
+
+  function unionRecords(local, remote) {
+    var map = {};
+    function add(src) {
+      Object.keys(src || {}).forEach(function (k) {
+        map[k] = map[k] || {};
+        (src[k] || []).forEach(function (e) { if (e && e.id) map[k][e.id] = e; });
+      });
+    }
+    add(local); add(remote);
+    var out = {};
+    Object.keys(map).forEach(function (k) {
+      out[k] = Object.keys(map[k]).map(function (id) { return map[k][id]; });
+    });
+    return out;
+  }
+
+  function mergeRemote(remote) {
+    if (!remote || typeof remote !== "object") return;
+    var d = defaultState();
+    state.targets = Object.assign({}, d.targets, remote.targets || state.targets);
+    state.height = remote.height || state.height;
+    state.entries = unionRecords(state.entries, remote.entries);
+    state.body = unionRecords(state.body, remote.body);
+    save();
+  }
+
+  function onSignedIn(user) {
+    currentUser = user;
+    renderAuth();
+    toast("Conectado · sincronizando...");
+    fetchRemote()
+      .then(function (remote) {
+        mergeRemote(remote);
+        renderAll();
+        toast("Sincronizado");
+      })
+      .catch(function (e) {
+        renderAll();
+        toast("Conectado (sin datos previos en la nube)");
+      });
+  }
+
+  function onSignedOut() {
+    currentUser = null;
+    renderAuth();
+  }
+
+  function signIn(e) {
+    e.preventDefault();
+    if (!sb) { toast("Supabase no está configurado aún"); return; }
+    var email = (el.authEmail.value || "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast("Escribe un correo válido"); return; }
+    var redirectTo = window.location.origin + window.location.pathname;
+    el.signInBtn.disabled = true;
+    sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: redirectTo } })
+      .then(function (r) {
+        el.signInBtn.disabled = false;
+        if (r.error) throw r.error;
+        toast("Revisa tu correo y haz click en el enlace");
+      })
+      .catch(function (err) {
+        el.signInBtn.disabled = false;
+        toast("No se pudo enviar el correo");
+        console.warn(err);
+      });
+  }
+
+  function signOut() {
+    if (sb) sb.auth.signOut();
+    onSignedOut();
+  }
+
+  function renderAuth() {
+    if (!sb) {
+      el.authStatus.textContent = "Supabase no configurado: modo local (sin nube).";
+      el.authEmail.disabled = true;
+      el.signInBtn.disabled = true;
+      el.signOutBtn.hidden = true;
+      return;
+    }
+    if (currentUser) {
+      el.authStatus.textContent = "Conectado como " + (currentUser.email || currentUser.id) + ". Todo se guarda en la nube y se sincroniza.";
+      el.authEmail.disabled = true;
+      el.signInBtn.disabled = true;
+      el.signOutBtn.hidden = false;
+    } else {
+      el.authStatus.textContent = "Sin conexión: tus datos quedan solo en este navegador.";
+      el.authEmail.disabled = false;
+      el.signInBtn.disabled = false;
+      el.signOutBtn.hidden = true;
+    }
+  }
+
   // ---- Tabs ----
   function switchTab(name) {
     document.querySelectorAll(".tab").forEach(function (b) {
@@ -445,6 +583,7 @@
     renderEntries();
     renderBody();
     renderSettings();
+    renderAuth();
   }
 
   // ---- Init ----
@@ -463,6 +602,9 @@
   el.bodyForm.addEventListener("submit", addBody);
   el.targetForm.addEventListener("submit", saveTargets);
 
+  el.authForm.addEventListener("submit", signIn);
+  el.signOutBtn.addEventListener("click", signOut);
+
   el.exportBtn.addEventListener("click", exportData);
   el.copyBtn.addEventListener("click", copyData);
   el.importBtn.addEventListener("click", function () { el.importFile.click(); });
@@ -474,4 +616,15 @@
   document.querySelectorAll(".tab").forEach(function (b) {
     b.addEventListener("click", function () { switchTab(b.dataset.tab); });
   });
+
+  // Restaurar sesión de Supabase si ya existía.
+  if (sb) {
+    sb.auth.getSession().then(function (res) {
+      if (res.data && res.data.session) onSignedIn(res.data.session.user);
+    }).catch(function () {});
+    sb.auth.onAuthStateChange(function (event, session) {
+      if (event === "SIGNED_IN" && session) onSignedIn(session.user);
+      else if (event === "SIGNED_OUT") onSignedOut();
+    });
+  }
 })();
