@@ -242,3 +242,50 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0;
 @media (min-width: 640px) {
   .row.three { grid-template-columns: 1fr 1fr 1fr; }
 }
+
+/* ---- Plan / metas ---- */
+.calc-result {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin-top: 0.8rem;
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.calc-grid div {
+  background: #f7f8f4;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem;
+  text-align: center;
+}
+.calc-grid span { display: block; color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.calc-grid b { font-size: 1.12rem; }
+.calc-result .primary { margin-top: 0.6rem; }
+
+.plateau .verdict {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 0.9rem;
+}
+.plateau .verdict.ok { background: #f0fdf4; border-color: #bbf7d0; }
+.plateau .verdict.warn { background: #fefce8; border-color: #fde68a; }
+.plateau .verdict.na { background: #f7f8f4; color: var(--muted); font-weight: 500; }
+.plateau ul { list-style: none; margin: 0; padding: 0; }
+.plateau li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.87rem;
+}

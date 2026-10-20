@@ -73,6 +73,7 @@
     return {
       targets: { kcal: 1650, prot: 125, carb: 200, fat: 70 },
       height: 166,
+      goal: "cut",
       entries: {},
       body: {}
     };
@@ -86,6 +87,7 @@
         var parsed = JSON.parse(raw);
         s.targets = Object.assign(s.targets, parsed.targets || {});
         s.height = parsed.height || 166;
+        s.goal = parsed.goal || "cut";
         s.entries = parsed.entries || {};
         s.body = parsed.body || {};
       }
@@ -115,6 +117,9 @@
     targetForm: $("targetForm"), tKcal: $("tKcal"), tProt: $("tProt"), tCarb: $("tCarb"), tFat: $("tFat"), tHeight: $("tHeight"),
     exportBtn: $("exportBtn"), copyBtn: $("copyBtn"), importBtn: $("importBtn"), importFile: $("importFile"),
     authStatus: $("authStatus"), authForm: $("authForm"), authEmail: $("authEmail"), signInBtn: $("signInBtn"), signOutBtn: $("signOutBtn"),
+    calcForm: $("calcForm"), cSex: $("cSex"), cAge: $("cAge"), cHeight: $("cHeight"), cWeight: $("cWeight"), cActivity: $("cActivity"), cGoal: $("cGoal"), cProt: $("cProt"), cFatPct: $("cFatPct"),
+    calcResult: $("calcResult"), rBMR: $("rBMR"), rTDEE: $("rTDEE"), rKcal: $("rKcal"), rProt: $("rProt"), rCarb: $("rCarb"), rFat: $("rFat"), rProtNote: $("rProtNote"), calcNote: $("calcNote"), applyBtn: $("applyBtn"),
+    plateau: $("plateau"),
     toast: $("toast")
   };
 
@@ -589,6 +594,150 @@
     }
   }
 
+  // ---- Calculadora y estancamiento ----
+  var lastCalc = null;
+
+  function calcGoals(e) {
+    e.preventDefault();
+    var sex = el.cSex.value;
+    var age = num(el.cAge.value, 33);
+    var h = num(el.cHeight.value, 166);
+    var w = num(el.cWeight.value, 77);
+    var act = parseFloat(el.cActivity.value) || 1.55;
+    var goal = el.cGoal.value;
+    var protKg = num(el.cProt.value, 1.6);
+    var fatPct = num(el.cFatPct.value, 30) / 100;
+
+    if (!(age > 0) || !(h > 0) || !(w > 0)) { toast("Completa edad, estatura y peso"); return; }
+
+    var bmr = sex === "m"
+      ? 10 * w + 6.25 * h - 5 * age + 5
+      : 10 * w + 6.25 * h - 5 * age - 161;
+    var tdee = bmr * act;
+    var kcal;
+    if (goal === "cut") kcal = tdee * 0.8;
+    else if (goal === "bulk") kcal = tdee * 1.1;
+    else kcal = tdee;
+
+    var prot = w * protKg;
+    var fat = (kcal * fatPct) / 9;
+    var carb = (kcal - prot * 4 - fat * 9) / 4;
+    if (carb < 0) carb = 0;
+
+    lastCalc = { kcal: Math.round(kcal), prot: Math.round(prot), carb: Math.round(carb), fat: Math.round(fat), height: h, goal: goal };
+
+    el.rBMR.textContent = Math.round(bmr) + " kcal";
+    el.rTDEE.textContent = Math.round(tdee) + " kcal";
+    el.rKcal.textContent = Math.round(kcal) + " kcal";
+    el.rProt.textContent = Math.round(prot) + " g";
+    el.rCarb.textContent = Math.round(carb) + " g";
+    el.rFat.textContent = Math.round(fat) + " g";
+    el.rProtNote.textContent = "/ " + protKg + " g/kg";
+    el.calcNote.textContent = "Método Mifflin-St Jeor · " + (goal === "cut" ? "déficit −20%" : goal === "bulk" ? "superávit +10%" : "mantenimiento") + " · proteína " + protKg + " g/kg · grasa " + Math.round(fatPct * 100) + "% de las kcal. Es un punto de partida: ajústalo según cómo responde tu cuerpo.";
+    el.calcResult.hidden = false;
+  }
+
+  function applyCalc() {
+    if (!lastCalc) return;
+    state.targets.kcal = lastCalc.kcal;
+    state.targets.prot = lastCalc.prot;
+    state.targets.carb = lastCalc.carb;
+    state.targets.fat = lastCalc.fat;
+    if (lastCalc.height) state.height = lastCalc.height;
+    state.goal = lastCalc.goal;
+    save();
+    renderAll();
+    toast("Objetivos actualizados");
+  }
+
+  function prefillCalc() {
+    el.cAge.value = 33;
+    el.cHeight.value = state.height || 166;
+    var arr = sortedBody().filter(function (i) { return i.e.weight != null; });
+    el.cWeight.value = arr.length ? arr[arr.length - 1].e.weight : "";
+    el.cGoal.value = state.goal || "cut";
+  }
+
+  function fmtRate(n) { return (Math.round(n * 100) / 100).toString().replace(".", ","); }
+
+  function renderPlateau() {
+    var goal = state.goal || "cut";
+    var box = el.plateau;
+    var wpts = sortedBody().filter(function (i) { return i.e.weight != null; });
+
+    if (wpts.length < 3) {
+      box.innerHTML = '<div class="verdict na">Registra tu peso al menos 1 vez por semana durante 3 semanas para evaluar si estás estancado.</div>';
+      return;
+    }
+    var first = wpts[0], last = wpts[wpts.length - 1];
+    var days = (parseKey(last.date) - parseKey(first.date)) / 864e5;
+    var weeks = days / 7;
+    if (weeks < 2.5) {
+      box.innerHTML = '<div class="verdict na">Llevas ' + Math.round(days) + ' días de datos. Necesitas ~3 semanas para detectar un estancamiento real.</div>';
+      return;
+    }
+    var rate = (last.e.weight - first.e.weight) / weeks; // kg/semana
+
+    var wst = sortedBody().filter(function (i) { return i.e.waist != null; });
+    var waistRate = null;
+    if (wst.length >= 2) {
+      var wf = wst[0], wl = wst[wst.length - 1];
+      var wdays = (parseKey(wl.date) - parseKey(wf.date)) / 864e5;
+      if (wdays >= 14) waistRate = (wl.e.waist - wf.e.waist) / (wdays / 7);
+    }
+
+    var verdict = "", cls = "", suggestions = [];
+
+    if (goal === "maintain" || goal === "bulk") {
+      if (Math.abs(rate) < 0.1) {
+        verdict = "Tu peso se mantiene estable, justo lo esperado para tu objetivo.";
+        cls = "ok";
+      } else if (rate > 0.1 && goal === "bulk") {
+        verdict = "Vas subiendo ~" + fmtRate(rate) + " kg/semana. Buen ritmo de ganancia.";
+        cls = "ok";
+      } else {
+        verdict = "Tu peso está cambiando más de lo esperado para tu objetivo.";
+        cls = "warn";
+        suggestions = ["Revisa tu ingesta real y ajusta ±100–200 kcal según quieras frenar o acelerar."];
+      }
+    } else {
+      if (rate <= -0.25) {
+        verdict = "Buen ritmo: bajas ~" + fmtRate(Math.abs(rate)) + " kg/semana. Sigue igual.";
+        cls = "ok";
+      } else if (rate > -0.1) {
+        if (waistRate != null && waistRate <= -0.5) {
+          verdict = "Tu peso está estable pero tu cintura sigue bajando (~" + fmtRate(Math.abs(waistRate)) + " cm/semana): estás recomponiendo (pierdes grasa y ganas músculo). No es estancamiento.";
+          cls = "ok";
+        } else {
+          verdict = "Posible estancamiento: llevas " + Math.round(weeks) + " semanas sin bajar de peso.";
+          cls = "warn";
+          suggestions = [
+            "Recalcula tus calorías: al pesar menos, tu TDEE baja. Baja −5 a −10% de kcal (≈100–200 kcal).",
+            "Revisa el registro: aceite, salsas y porciones 'a ojo' son la causa #1 de estancamiento. Pesa en seco/crudo.",
+            "Sube el NEAT: apunta a 7.000–10.000 pasos/día además del gimnasio.",
+            "Mantén proteína alta (1.6–2.2 g/kg) y entrena fuerza para no perder músculo.",
+            "Si llevas >8–12 semanas en déficit, haz una 'diet break' de 1–2 semanas a mantenimiento."
+          ];
+        }
+      } else {
+        verdict = "Vas lento (~" + fmtRate(Math.abs(rate)) + " kg/semana). Cerca del estancamiento.";
+        cls = "warn";
+        suggestions = [
+          "Aprieta un poco el déficit (−100–150 kcal) o suma pasos diarios.",
+          "Confirma que el registro esté completo: los snacks y líquidos también cuentan."
+        ];
+      }
+    }
+
+    var html = '<div class="verdict ' + cls + '">' + verdict + "</div>";
+    if (suggestions.length) {
+      html += "<ul>";
+      suggestions.forEach(function (s) { html += "<li>" + s + "</li>"; });
+      html += "</ul>";
+    }
+    box.innerHTML = html;
+  }
+
   // ---- Tabs ----
   function switchTab(name) {
     document.querySelectorAll(".tab").forEach(function (b) {
@@ -603,6 +752,7 @@
     renderSummary();
     renderEntries();
     renderBody();
+    renderPlateau();
     renderSettings();
     renderAuth();
   }
@@ -610,6 +760,7 @@
   // ---- Init ----
   populateDatalist();
   renderSettings();
+  prefillCalc();
   setDate(new Date());
 
   el.prevDay.addEventListener("click", function () { setDate(new Date(selectedDate.getTime() - 864e5)); });
@@ -622,6 +773,9 @@
 
   el.bodyForm.addEventListener("submit", addBody);
   el.targetForm.addEventListener("submit", saveTargets);
+
+  el.calcForm.addEventListener("submit", calcGoals);
+  el.applyBtn.addEventListener("click", applyCalc);
 
   el.authForm.addEventListener("submit", signIn);
   el.signOutBtn.addEventListener("click", signOut);
