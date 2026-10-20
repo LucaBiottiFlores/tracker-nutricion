@@ -93,7 +93,7 @@
     chartWrap: $("chartWrap"), weightChart: $("weightChart"), bfChart: $("bfChart"),
     targetForm: $("targetForm"), tKcal: $("tKcal"), tProt: $("tProt"), tCarb: $("tCarb"), tFat: $("tFat"), tHeight: $("tHeight"),
     exportBtn: $("exportBtn"), copyBtn: $("copyBtn"), importBtn: $("importBtn"), importFile: $("importFile"),
-    authStatus: $("authStatus"), authForm: $("authForm"), authEmail: $("authEmail"), signOutBtn: $("signOutBtn"),
+    authStatus: $("authStatus"), authForm: $("authForm"), authEmail: $("authEmail"), signInBtn: $("signInBtn"), signOutBtn: $("signOutBtn"),
     toast: $("toast")
   };
 
