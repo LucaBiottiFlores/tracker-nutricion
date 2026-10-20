@@ -71,7 +71,7 @@
 
   function defaultState() {
     return {
-      targets: { kcal: 1650, prot: 125, carb: 200, fat: 70 },
+      targets: { kcal: 1750, prot: 125, carb: 180, fat: 60 },
       height: 166,
       goal: "cut",
       entries: {},
