@@ -1,6 +1,27 @@
 (function () {
   "use strict";
 
+  // Compatibilidad con navegadores móviles antiguos (sin padStart / Object.assign / Math.log10)
+  if (!String.prototype.padStart) {
+    String.prototype.padStart = function (len, ch) {
+      var s = String(this), c = ch == null ? " " : String(ch);
+      while (s.length < len) s = c + s;
+      return s;
+    };
+  }
+  if (typeof Object.assign !== "function") {
+    Object.assign = function (t) {
+      for (var i = 1; i < arguments.length; i++) {
+        var s = arguments[i];
+        if (s) for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) t[k] = s[k];
+      }
+      return t;
+    };
+  }
+  if (typeof Math.log10 !== "function") {
+    Math.log10 = function (x) { return Math.log(x) / Math.LN10; };
+  }
+
   var STORAGE_KEY = "trackerNutricion";
   var UNIT_LABELS = {
     taza: "taza", cda: "cucharada", cdta: "cucharadita", unidad: "unidad",

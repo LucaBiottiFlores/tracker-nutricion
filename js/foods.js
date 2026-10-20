@@ -7,6 +7,7 @@ window.FOODS = [
   // ---- Cereales y panes ----
   { n:"Avena (cruda)", cat:"Cereales", kcal:389, prot:16.9, carb:66.3, fat:6.9, fiber:10.6, sugar:1, sodium:2, satfat:1.2, calcium:54, iron:4.7, potassium:429, vitc:0, u:{taza:80, cda:10, porcion:40} },
   { n:"Avena (cocida en agua)", cat:"Cereales", kcal:71, prot:2.5, carb:12, fat:1.5, fiber:1.7, sugar:0.3, sodium:4, satfat:0.3, calcium:9, iron:0.9, potassium:61, vitc:0, u:{taza:240, porcion:200} },
+  { n:"Avena instantánea Cuisine & Co", cat:"Cereales", kcal:350, prot:12.5, carb:57.3, fat:7.9, fiber:9.9, sugar:1.2, sodium:3, satfat:1.3, calcium:54, iron:4.7, potassium:429, vitc:0, u:{taza:60, cda:10, porcion:30} },
   { n:"Arroz blanco (cocido)", cat:"Cereales", kcal:130, prot:2.7, carb:28.2, fat:0.3, fiber:0.4, sugar:0.1, sodium:1, satfat:0.1, calcium:10, iron:0.2, potassium:35, vitc:0, u:{taza:180, cda:15, porcion:150} },
   { n:"Arroz integral (cocido)", cat:"Cereales", kcal:111, prot:2.6, carb:23, fat:0.9, fiber:1.8, sugar:0.4, sodium:5, satfat:0.2, calcium:10, iron:0.5, potassium:43, vitc:0, u:{taza:180, porcion:150} },
   { n:"Fideos / pasta (cocidos)", cat:"Cereales", kcal:158, prot:5.8, carb:31, fat:0.9, fiber:1.8, sugar:0.6, sodium:1, satfat:0.2, calcium:7, iron:0.5, potassium:44, vitc:0, u:{taza:140, porcion:200} },
@@ -19,6 +20,9 @@ window.FOODS = [
   // ---- Lácteos y huevos ----
   { n:"Yogur natural (sin azúcar)", cat:"Lácteos", kcal:61, prot:3.5, carb:4.7, fat:3.3, fiber:0, sugar:4.7, sodium:46, satfat:2.1, calcium:121, iron:0.1, potassium:155, vitc:0.5, u:{taza:245, porcion:170} },
   { n:"Yogur batido sabor (con azúcar)", cat:"Lácteos", kcal:85, prot:3.2, carb:14, fat:2.5, fiber:0, sugar:13, sodium:50, satfat:1.6, calcium:110, iron:0.1, potassium:140, vitc:0.5, u:{taza:245, porcion:150} },
+  { n:"Yogur Soprole Proteína natural (pote 155 g)", cat:"Lácteos", kcal:68, prot:6.6, carb:6.3, fat:1.8, fiber:0, sugar:6.3, sodium:65, satfat:1.2, calcium:120, iron:0.1, potassium:150, vitc:0.5, u:{unidad:155, porcion:155} },
+  { n:"Yogur Soprole Protein Power natural (pote 155 g)", cat:"Lácteos", kcal:84, prot:10.4, carb:7.1, fat:1.5, fiber:0, sugar:0, sodium:59, satfat:1.0, calcium:120, iron:0.1, potassium:150, vitc:0.5, u:{unidad:155, porcion:155} },
+  { n:"Yogur Nestlé Goodnes Protein natural (pote 140 g)", cat:"Lácteos", kcal:81, prot:7.2, carb:8.8, fat:1.9, fiber:0, sugar:6.9, sodium:87, satfat:1.2, calcium:120, iron:0.1, potassium:150, vitc:0.5, u:{unidad:140, porcion:140} },
   { n:"Leche entera", cat:"Lácteos", kcal:61, prot:3.2, carb:4.8, fat:3.3, fiber:0, sugar:5.1, sodium:44, satfat:1.9, calcium:113, iron:0.03, potassium:132, vitc:0, u:{taza:240, porcion:200} },
   { n:"Leche descremada", cat:"Lácteos", kcal:34, prot:3.4, carb:5, fat:0.1, fiber:0, sugar:5, sodium:42, satfat:0.1, calcium:122, iron:0.03, potassium:156, vitc:0, u:{taza:240, porcion:200} },
   { n:"Huevo (entero)", cat:"Lácteos y huevos", kcal:155, prot:12.6, carb:1.1, fat:10.6, fiber:0, sugar:1.1, sodium:124, satfat:3.3, calcium:56, iron:1.8, potassium:138, vitc:0, u:{unidad:50, porcion:50} },
