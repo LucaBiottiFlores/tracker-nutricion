@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Tracker Nutrición</title>
+  <meta name="description" content="Registro simple de comidas, calorías, macros y grasa corporal." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%2322c55e'/><text x='32' y='43' font-family='Arial' font-size='30' font-weight='bold' fill='white' text-anchor='middle'>K</text></svg>" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">Tracker<span>Nutrición</span></div>
+    <div class="date-nav">
+      <button type="button" id="prevDay" aria-label="Día anterior">&larr;</button>
+      <span id="dateLabel"></span>
+      <button type="button" id="nextDay" aria-label="Día siguiente">&rarr;</button>
+      <button type="button" id="todayBtn" class="link">Hoy</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" class="tab active" data-tab="comidas">Comidas</button>
+    <button type="button" class="tab" data-tab="cuerpo">Cuerpo</button>
+    <button type="button" class="tab" data-tab="ajustes">Ajustes</button>
+  </nav>
+
+  <main>
+    <!-- Resumen del día -->
+    <section class="summary" aria-label="Resumen del día">
+      <div class="kcal-big">
+        <div class="kcal-num"><span id="sumKcal">0</span><small>/ <span id="sumKcalTarget">1650</span> kcal</small></div>
+        <div class="bar"><div id="kcalBar" class="bar-fill"></div></div>
+      </div>
+      <div class="macro-row">
+        <div class="macro"><span>Proteína</span><b id="sumProt">0</b><small id="sumProtTarget">/ 125 g</small></div>
+        <div class="macro"><span>Carbos</span><b id="sumCarb">0</b><small id="sumCarbTarget">/ 200 g</small></div>
+        <div class="macro"><span>Grasa</span><b id="sumFat">0</b><small id="sumFatTarget">/ 70 g</small></div>
+      </div>
+      <details class="micros">
+        <summary>Micros y otros <span class="hint">(estimación)</span></summary>
+        <ul id="microList"></ul>
+      </details>
+    </section>
+
+    <!-- Tab: Comidas -->
+    <section class="panel active" data-panel="comidas">
+      <h2>Registrar comida</h2>
+      <form id="foodForm" autocomplete="off">
+        <label>Alimento
+          <input type="text" id="foodSearch" list="foodList" placeholder="Ej: avena, pollo, pan..." />
+          <datalist id="foodList"></datalist>
+        </label>
+        <div class="row">
+          <label class="qty">Cantidad
+            <input type="number" id="foodQty" value="1" min="0" step="0.25" inputmode="decimal" />
+          </label>
+          <label class="unit">Medida
+            <select id="foodUnit"><option value="">—elige alimento—</option></select>
+          </label>
+        </div>
+        <button type="submit" class="primary" id="addBtn" disabled>Agregar</button>
+      </form>
+
+      <h2>Comidas del día</h2>
+      <ul id="entryList" class="entry-list"></ul>
+      <p id="emptyEntry" class="empty">Aún no registras comidas este día.</p>
+    </section>
+
+    <!-- Tab: Cuerpo -->
+    <section class="panel" data-panel="cuerpo">
+      <h2>Registrar medidas</h2>
+      <form id="bodyForm">
+        <div class="row">
+          <label>Peso (kg)
+            <input type="number" id="bodyWeight" step="0.1" min="0" inputmode="decimal" placeholder="77" />
+          </label>
+          <label>Cintura (cm)
+            <input type="number" id="bodyWaist" step="0.1" min="0" inputmode="decimal" placeholder="a la altura del ombligo" />
+          </label>
+          <label>Cuello (cm)
+            <input type="number" id="bodyNeck" step="0.1" min="0" inputmode="decimal" placeholder="debajo de la nuez" />
+          </label>
+        </div>
+        <p class="hint">Con peso + cintura + cuello se estima el % de grasa (método US Navy). Mídete siempre en las mismas condiciones: mañana, en ayunas.</p>
+        <button type="submit" class="primary">Guardar medida</button>
+      </form>
+
+      <div id="bfNow" class="bf-now" hidden></div>
+      <h2>Historial</h2>
+      <ul id="bodyList" class="body-list"></ul>
+      <p id="emptyBody" class="empty">Aún no registras medidas.</p>
+      <div id="chartWrap" class="chart-wrap" hidden>
+        <h3>Peso (kg)</h3>
+        <div id="weightChart"></div>
+        <h3>% grasa estimado</h3>
+        <div id="bfChart"></div>
+      </div>
+    </section>
+
+    <!-- Tab: Ajustes -->
+    <section class="panel" data-panel="ajustes">
+      <h2>Objetivos diarios</h2>
+      <form id="targetForm">
+        <div class="row">
+          <label>Calorías (kcal)<input type="number" id="tKcal" min="0" /></label>
+          <label>Proteína (g)<input type="number" id="tProt" min="0" /></label>
+        </div>
+        <div class="row">
+          <label>Carbos (g)<input type="number" id="tCarb" min="0" /></label>
+          <label>Grasa (g)<input type="number" id="tFat" min="0" /></label>
+        </div>
+        <div class="row">
+          <label>Estatura (cm)<input type="number" id="tHeight" min="0" /></label>
+        </div>
+        <button type="submit" class="primary">Guardar objetivos</button>
+      </form>
+
+      <h2>Respaldo</h2>
+      <p class="hint">Tus datos viven solo en este navegador. Exporta para respaldar o para compartírmelos.</p>
+      <div class="btn-row">
+        <button type="button" id="exportBtn" class="ghost">Exportar (descargar)</button>
+        <button type="button" id="copyBtn" class="ghost">Copiar datos</button>
+        <button type="button" id="importBtn" class="ghost">Importar</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden />
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/foods.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

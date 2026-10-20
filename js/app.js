@@ -1,0 +1,477 @@
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "trackerNutricion";
+  var UNIT_LABELS = {
+    taza: "taza", cda: "cucharada", cdta: "cucharadita", unidad: "unidad",
+    porcion: "porción", lata: "lata", botella: "botella", vaso: "vaso",
+    copa: "copa", trago: "trago"
+  };
+
+  var MICROS = [
+    ["fiber", "Fibra (g)"], ["sugar", "Azúcar (g)"], ["sodium", "Sodio (mg)"],
+    ["satfat", "Grasa sat. (g)"], ["calcium", "Calcio (mg)"], ["iron", "Hierro (mg)"],
+    ["potassium", "Potasio (mg)"], ["vitc", "Vitamina C (mg)"]
+  ];
+
+  function dateKey(d) {
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+
+  function parseKey(k) {
+    var p = k.split("-").map(Number);
+    return new Date(p[0], p[1] - 1, p[2]);
+  }
+
+  function defaultState() {
+    return {
+      targets: { kcal: 1650, prot: 125, carb: 200, fat: 70 },
+      height: 166,
+      entries: {},
+      body: {}
+    };
+  }
+
+  function load() {
+    var s = defaultState();
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        s.targets = Object.assign(s.targets, parsed.targets || {});
+        s.height = parsed.height || 166;
+        s.entries = parsed.entries || {};
+        s.body = parsed.body || {};
+      }
+    } catch (e) {}
+    return s;
+  }
+
+  var state = load();
+  var selectedDate = new Date();
+  var selectedFood = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    prevDay: $("prevDay"), nextDay: $("nextDay"), todayBtn: $("todayBtn"),
+    dateLabel: $("dateLabel"),
+    sumKcal: $("sumKcal"), sumKcalTarget: $("sumKcalTarget"), kcalBar: $("kcalBar"),
+    sumProt: $("sumProt"), sumProtTarget: $("sumProtTarget"),
+    sumCarb: $("sumCarb"), sumCarbTarget: $("sumCarbTarget"),
+    sumFat: $("sumFat"), sumFatTarget: $("sumFatTarget"),
+    microList: $("microList"),
+    foodSearch: $("foodSearch"), foodList: $("foodList"),
+    foodQty: $("foodQty"), foodUnit: $("foodUnit"), foodForm: $("foodForm"), addBtn: $("addBtn"),
+    entryList: $("entryList"), emptyEntry: $("emptyEntry"),
+    bodyForm: $("bodyForm"), bodyWeight: $("bodyWeight"), bodyWaist: $("bodyWaist"), bodyNeck: $("bodyNeck"),
+    bfNow: $("bfNow"), bodyList: $("bodyList"), emptyBody: $("emptyBody"),
+    chartWrap: $("chartWrap"), weightChart: $("weightChart"), bfChart: $("bfChart"),
+    targetForm: $("targetForm"), tKcal: $("tKcal"), tProt: $("tProt"), tCarb: $("tCarb"), tFat: $("tFat"), tHeight: $("tHeight"),
+    exportBtn: $("exportBtn"), copyBtn: $("copyBtn"), importBtn: $("importBtn"), importFile: $("importFile"),
+    toast: $("toast")
+  };
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function toast(msg) {
+    el.toast.textContent = msg;
+    el.toast.hidden = false;
+    clearTimeout(el.toast._t);
+    el.toast._t = setTimeout(function () { el.toast.hidden = true; }, 2200);
+  }
+
+  // ---- Fecha ----
+  function fmtDate(d) {
+    var dias = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+    var meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    return dias[d.getDay()] + " " + d.getDate() + " " + meses[d.getMonth()];
+  }
+
+  function setDate(d) {
+    selectedDate = d;
+    el.dateLabel.textContent = fmtDate(d);
+    renderAll();
+  }
+
+  // ---- Totales del día ----
+  function dayTotals() {
+    var key = dateKey(selectedDate);
+    var list = state.entries[key] || [];
+    var t = { kcal: 0, prot: 0, carb: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0, satfat: 0, calcium: 0, iron: 0, potassium: 0, vitc: 0 };
+    list.forEach(function (e) {
+      t.kcal += e.kcal || 0;
+      t.prot += e.prot || 0;
+      t.carb += e.carb || 0;
+      t.fat += e.fat || 0;
+      t.fiber += e.fiber || 0;
+      t.sugar += e.sugar || 0;
+      t.sodium += e.sodium || 0;
+      t.satfat += e.satfat || 0;
+      t.calcium += e.calcium || 0;
+      t.iron += e.iron || 0;
+      t.potassium += e.potassium || 0;
+      t.vitc += e.vitc || 0;
+    });
+    return t;
+  }
+
+  function renderSummary() {
+    var t = dayTotals();
+    var g = state.targets;
+    el.sumKcal.textContent = Math.round(t.kcal);
+    el.sumKcalTarget.textContent = g.kcal;
+    el.sumProt.textContent = Math.round(t.prot);
+    el.sumProtTarget.textContent = "/ " + g.prot + " g";
+    el.sumCarb.textContent = Math.round(t.carb);
+    el.sumCarbTarget.textContent = "/ " + g.carb + " g";
+    el.sumFat.textContent = Math.round(t.fat);
+    el.sumFatTarget.textContent = "/ " + g.fat + " g";
+
+    var pct = g.kcal > 0 ? Math.min(120, (t.kcal / g.kcal) * 100) : 0;
+    el.kcalBar.style.width = pct + "%";
+    el.kcalBar.classList.toggle("over", t.kcal > g.kcal);
+
+    var html = "";
+    MICROS.forEach(function (pair) {
+      var key = pair[0], label = pair[1];
+      var v = t[key] || 0;
+      var shown = key === "sodium" ? Math.round(v) : (Math.round(v * 10) / 10);
+      html += "<li><span>" + label + "</span><b>" + shown + "</b></li>";
+    });
+    el.microList.innerHTML = html;
+  }
+
+  // ---- Comidas ----
+  function populateDatalist() {
+    var frag = document.createDocumentFragment();
+    window.FOODS.forEach(function (f) {
+      var o = document.createElement("option");
+      o.value = f.n;
+      frag.appendChild(o);
+    });
+    el.foodList.appendChild(frag);
+  }
+
+  function findFood(name) {
+    name = (name || "").trim().toLowerCase();
+    for (var i = 0; i < window.FOODS.length; i++) {
+      if (window.FOODS[i].n.toLowerCase() === name) return window.FOODS[i];
+    }
+    return null;
+  }
+
+  function renderUnits(food) {
+    el.foodUnit.innerHTML = "";
+    var opts = [];
+    Object.keys(food.u || {}).forEach(function (key) {
+      var g = food.u[key];
+      var label = (UNIT_LABELS[key] || key) + " (" + g + " g)";
+      opts.push('<option value="' + key + '">' + label + "</option>");
+    });
+    opts.push('<option value="g">gramos (g)</option>');
+    opts.push('<option value="ml">mililitros (ml)</option>');
+    el.foodUnit.innerHTML = opts.join("");
+    el.addBtn.disabled = false;
+  }
+
+  function onFoodInput() {
+    var f = findFood(el.foodSearch.value);
+    if (f) {
+      selectedFood = f;
+      renderUnits(f);
+    } else {
+      selectedFood = null;
+      el.foodUnit.innerHTML = '<option value="">—elige alimento—</option>';
+      el.addBtn.disabled = true;
+    }
+  }
+
+  function addEntry(e) {
+    e.preventDefault();
+    if (!selectedFood) { toast("Elige un alimento de la lista"); return; }
+    var qty = parseFloat(el.foodQty.value);
+    if (!(qty > 0)) { toast("Pon una cantidad válida"); return; }
+    var unit = el.foodUnit.value;
+    var grams;
+    if (unit === "g" || unit === "ml") {
+      grams = qty;
+    } else {
+      grams = qty * (selectedFood.u[unit] || 100);
+    }
+    var mul = grams / 100;
+    var entry = {
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      name: selectedFood.n,
+      qty: qty,
+      unit: unit,
+      grams: Math.round(grams * 10) / 10,
+      kcal: r2(selectedFood.kcal * mul),
+      prot: r2(selectedFood.prot * mul),
+      carb: r2(selectedFood.carb * mul),
+      fat: r2(selectedFood.fat * mul),
+      fiber: r2(selectedFood.fiber * mul),
+      sugar: r2(selectedFood.sugar * mul),
+      sodium: r2(selectedFood.sodium * mul),
+      satfat: r2(selectedFood.satfat * mul),
+      calcium: r2(selectedFood.calcium * mul),
+      iron: r2(selectedFood.iron * mul),
+      potassium: r2(selectedFood.potassium * mul),
+      vitc: r2(selectedFood.vitc * mul)
+    };
+    var key = dateKey(selectedDate);
+    if (!state.entries[key]) state.entries[key] = [];
+    state.entries[key].push(entry);
+    save();
+    el.foodQty.value = 1;
+    renderAll();
+    toast("Agregado: " + entry.name);
+  }
+
+  function r2(n) { return Math.round((n || 0) * 10) / 10; }
+
+  function deleteEntry(id) {
+    var key = dateKey(selectedDate);
+    if (!state.entries[key]) return;
+    state.entries[key] = state.entries[key].filter(function (e) { return e.id !== id; });
+    if (!state.entries[key].length) delete state.entries[key];
+    save();
+    renderAll();
+  }
+
+  function renderEntries() {
+    var key = dateKey(selectedDate);
+    var list = state.entries[key] || [];
+    el.emptyEntry.hidden = list.length > 0;
+    el.entryList.innerHTML = "";
+    list.forEach(function (e) {
+      var li = document.createElement("li");
+      var unitLabel = (e.unit === "g" || e.unit === "ml") ? e.unit : (UNIT_LABELS[e.unit] || e.unit);
+      var sub = e.qty + " " + unitLabel + " · " + e.grams + " g";
+      li.innerHTML =
+        '<div class="info"><div class="name"></div><div class="sub"></div></div>' +
+        '<span class="kcal"></span>' +
+        '<button class="del" aria-label="Eliminar">&times;</button>';
+      li.querySelector(".name").textContent = e.name;
+      li.querySelector(".sub").textContent = sub;
+      li.querySelector(".kcal").textContent = Math.round(e.kcal) + " kcal";
+      li.querySelector(".del").addEventListener("click", function () { deleteEntry(e.id); });
+      el.entryList.appendChild(li);
+    });
+  }
+
+  // ---- Cuerpo ----
+  function navyBodyFat(waist, neck, height) {
+    if (!(waist > neck) || !(height > 0)) return null;
+    var d = 1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height);
+    var bf = (4.95 / d - 4.5) * 100;
+    return Math.max(0, Math.round(bf * 10) / 10);
+  }
+
+  function addBody(e) {
+    e.preventDefault();
+    var w = parseFloat(el.bodyWeight.value);
+    var waist = parseFloat(el.bodyWaist.value);
+    var neck = parseFloat(el.bodyNeck.value);
+    if (!(w > 0) && !(waist > 0) && !(neck > 0)) { toast("Pon al menos un dato"); return; }
+    var bf = navyBodyFat(waist, neck, state.height);
+    var entry = {
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      weight: w || null,
+      waist: waist || null,
+      neck: neck || null,
+      bf: bf
+    };
+    var key = dateKey(selectedDate);
+    if (!state.body[key]) state.body[key] = [];
+    state.body[key].push(entry);
+    save();
+    el.bodyWeight.value = ""; el.bodyWaist.value = ""; el.bodyNeck.value = "";
+    renderAll();
+    toast(bf != null ? "Guardado · % grasa est.: " + bf + "%" : "Guardado");
+  }
+
+  function deleteBody(id) {
+    var key = dateKey(selectedDate);
+    if (!state.body[key]) return;
+    state.body[key] = state.body[key].filter(function (e) { return e.id !== id; });
+    if (!state.body[key].length) delete state.body[key];
+    save();
+    renderAll();
+  }
+
+  function sortedBody() {
+    var arr = [];
+    Object.keys(state.body).forEach(function (k) {
+      (state.body[k] || []).forEach(function (e) { arr.push({ date: k, e: e }); });
+    });
+    arr.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    return arr;
+  }
+
+  function renderBody() {
+    var arr = sortedBody();
+    el.emptyBody.hidden = arr.length > 0;
+    el.bodyList.innerHTML = "";
+    arr.forEach(function (item) {
+      var e = item.e;
+      var li = document.createElement("li");
+      var parts = [];
+      if (e.weight != null) parts.push(e.weight + " kg");
+      if (e.waist != null) parts.push(e.waist + " cm cintura");
+      var bfTxt = e.bf != null ? " · " + e.bf + "% grasa" : "";
+      li.innerHTML =
+        '<div><div class="main">' + fmtShort(item.date) + "</div>" +
+        '<div class="sub">' + parts.join(" · ") + bfTxt + "</div></div>" +
+        '<button class="del" aria-label="Eliminar">&times;</button>';
+      li.querySelector(".del").addEventListener("click", function () { deleteBody(e.id); });
+      el.bodyList.appendChild(li);
+    });
+    renderCharts(arr);
+  }
+
+  function fmtShort(k) {
+    var d = parseKey(k);
+    return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+  }
+
+  function renderCharts(arr) {
+    var weights = arr.filter(function (i) { return i.e.weight != null; });
+    var bfs = arr.filter(function (i) { return i.e.bf != null; });
+    el.chartWrap.hidden = weights.length < 2 && bfs.length < 2;
+    if (el.chartWrap.hidden) return;
+    el.weightChart.innerHTML = weights.length >= 2 ? lineChart(weights.map(function (i) { return { d: i.date, v: i.e.weight }; }), "kg") : '<p class="hint">Necesitas al menos 2 pesajes.</p>';
+    el.bfChart.innerHTML = bfs.length >= 2 ? lineChart(bfs.map(function (i) { return { d: i.date, v: i.e.bf }; }), "%") : '<p class="hint">Necesitas al menos 2 mediciones con cintura y cuello.</p>';
+  }
+
+  function lineChart(points, unit) {
+    var W = 320, H = 120, pad = 14;
+    var values = points.map(function (p) { return p.v; });
+    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    if (max - min < 0.5) { max += 0.5; min -= 0.5; }
+    var n = points.length;
+    var step = (W - pad * 2) / Math.max(1, n - 1);
+    var coords = points.map(function (p, i) {
+      var x = pad + i * step;
+      var y = H - pad - ((p.v - min) / (max - min)) * (H - pad * 2);
+      return { x: x, y: y, p: p };
+    });
+    var line = coords.map(function (c) { return c.x.toFixed(1) + "," + c.y.toFixed(1); }).join(" ");
+    var dots = coords.map(function (c) {
+      return '<circle cx="' + c.x.toFixed(1) + '" cy="' + c.y.toFixed(1) + '" r="3" fill="#22c55e"></circle>';
+    }).join("");
+    var last = coords[coords.length - 1];
+    var label = '<text x="' + last.x.toFixed(1) + '" y="' + (last.y - 7).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#17181a">' + last.p.v + " " + unit + "</text>";
+    return '<svg viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<polyline points="' + line + '" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
+      dots + label + "</svg>";
+  }
+
+  // ---- Ajustes ----
+  function renderSettings() {
+    el.tKcal.value = state.targets.kcal;
+    el.tProt.value = state.targets.prot;
+    el.tCarb.value = state.targets.carb;
+    el.tFat.value = state.targets.fat;
+    el.tHeight.value = state.height;
+  }
+
+  function saveTargets(e) {
+    e.preventDefault();
+    state.targets.kcal = num(el.tKcal.value, 1650);
+    state.targets.prot = num(el.tProt.value, 125);
+    state.targets.carb = num(el.tCarb.value, 200);
+    state.targets.fat = num(el.tFat.value, 70);
+    state.height = num(el.tHeight.value, 166);
+    save();
+    renderAll();
+    toast("Objetivos guardados");
+  }
+
+  function num(v, d) { var n = parseFloat(v); return isNaN(n) ? d : n; }
+
+  // ---- Respaldo ----
+  function exportData() {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "tracker-nutricion-" + dateKey(new Date()) + ".json";
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 500);
+  }
+
+  function copyData() {
+    var txt = JSON.stringify(state);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { toast("Datos copiados"); }, function () { toast("No se pudo copiar"); });
+    } else {
+      toast("Copia manual no disponible");
+    }
+  }
+
+  function importData(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        if (!parsed || typeof parsed !== "object") throw new Error();
+        state = Object.assign(defaultState(), parsed);
+        state.targets = Object.assign(defaultState().targets, parsed.targets || {});
+        save();
+        renderAll();
+        toast("Datos importados");
+      } catch (err) {
+        toast("Archivo no válido");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---- Tabs ----
+  function switchTab(name) {
+    document.querySelectorAll(".tab").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.tab === name);
+    });
+    document.querySelectorAll(".panel").forEach(function (p) {
+      p.classList.toggle("active", p.dataset.panel === name);
+    });
+  }
+
+  function renderAll() {
+    renderSummary();
+    renderEntries();
+    renderBody();
+    renderSettings();
+  }
+
+  // ---- Init ----
+  populateDatalist();
+  renderSettings();
+  setDate(new Date());
+
+  el.prevDay.addEventListener("click", function () { setDate(new Date(selectedDate.getTime() - 864e5)); });
+  el.nextDay.addEventListener("click", function () { setDate(new Date(selectedDate.getTime() + 864e5)); });
+  el.todayBtn.addEventListener("click", function () { setDate(new Date()); });
+
+  el.foodSearch.addEventListener("input", onFoodInput);
+  el.foodSearch.addEventListener("change", onFoodInput);
+  el.foodForm.addEventListener("submit", addEntry);
+
+  el.bodyForm.addEventListener("submit", addBody);
+  el.targetForm.addEventListener("submit", saveTargets);
+
+  el.exportBtn.addEventListener("click", exportData);
+  el.copyBtn.addEventListener("click", copyData);
+  el.importBtn.addEventListener("click", function () { el.importFile.click(); });
+  el.importFile.addEventListener("change", function () {
+    if (el.importFile.files[0]) importData(el.importFile.files[0]);
+    el.importFile.value = "";
+  });
+
+  document.querySelectorAll(".tab").forEach(function (b) {
+    b.addEventListener("click", function () { switchTab(b.dataset.tab); });
+  });
+})();
