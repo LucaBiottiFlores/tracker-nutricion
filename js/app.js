@@ -205,7 +205,7 @@
   }
 
   // ---- Comidas ----
-  var suggestItems = [], activeIdx = -1, lastPick = 0;
+  var suggestItems = [], activeIdx = -1;
 
   function normalize(s) {
     return (s == null ? "" : String(s)).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -252,11 +252,11 @@
     toast(f.n + " · " + Math.round(f.kcal) + " kcal/100 g");
   }
 
-  function pickFood(f) {
-    var now = Date.now();
-    if (now - lastPick < 300) return;
-    lastPick = now;
-    selectFood(f);
+  function onDocClick(ev) {
+    if (el.foodSuggest.hidden) return;
+    var t = ev.target;
+    if (t === el.foodSearch || el.foodSuggest.contains(t)) return;
+    hideSuggest();
   }
 
   function renderSuggest(items) {
@@ -279,8 +279,7 @@
       cat.textContent = (f.cat || "Personalizado") + " · " + Math.round(f.kcal) + " kcal/100";
       b.appendChild(name);
       b.appendChild(cat);
-      b.addEventListener("mousedown", function (ev) { ev.preventDefault(); pickFood(f); });
-      b.addEventListener("pointerdown", function (ev) { ev.preventDefault(); pickFood(f); });
+      b.addEventListener("click", function () { selectFood(f); });
       el.foodSuggest.appendChild(b);
     });
     el.foodSuggest.hidden = false;
@@ -901,7 +900,7 @@
 
   el.foodSearch.addEventListener("input", onFoodInput);
   el.foodSearch.addEventListener("keydown", onFoodKeydown);
-  el.foodSearch.addEventListener("blur", function () { setTimeout(hideSuggest, 120); });
+  document.addEventListener("click", onDocClick);
   el.foodForm.addEventListener("submit", addEntry);
   el.toggleCustom.addEventListener("click", function () {
     var showing = el.customFoodForm.hidden;
