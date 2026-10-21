@@ -289,3 +289,43 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0;
   margin-bottom: 0.45rem;
   font-size: 0.87rem;
 }
+
+/* ---- Buscador de alimentos ---- */
+.search-wrap { position: relative; }
+.food-suggest {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-top: 0.2rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.14);
+}
+.food-suggest .sug {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.food-suggest .sug:last-child { border-bottom: 0; }
+.food-suggest .sug:hover, .food-suggest .sug.active { background: #f0fdf4; }
+.food-suggest .sname { font-weight: 600; font-size: 0.9rem; color: var(--ink); }
+.food-suggest .scat { font-size: 0.72rem; color: var(--muted); }
+.food-suggest .no-res { padding: 0.6rem 0.75rem; color: var(--muted); font-size: 0.85rem; }
+
+/* ---- Ingreso manual ---- */
+.toggle-custom { width: 100%; margin-top: 0.6rem; }
+#customFoodForm { margin-top: 0.8rem; }
+.custom-extra { font-size: 0.8rem; color: var(--muted); margin: 0.2rem 0 0.8rem; }
+.custom-extra summary { cursor: pointer; font-weight: 600; color: var(--ink); margin-bottom: 0.6rem; }

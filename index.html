@@ -48,10 +48,12 @@
     <section class="panel active" data-panel="comidas">
       <h2>Registrar comida</h2>
       <form id="foodForm" autocomplete="off">
-        <label>Alimento
-          <input type="text" id="foodSearch" list="foodList" placeholder="Ej: avena, pollo, pan..." />
-          <datalist id="foodList"></datalist>
-        </label>
+        <div class="search-wrap">
+          <label>Alimento
+            <input type="text" id="foodSearch" placeholder="Ej: avena, pollo, pan..." />
+          </label>
+          <div id="foodSuggest" class="food-suggest" hidden></div>
+        </div>
         <div class="row">
           <label class="qty">Cantidad
             <input type="number" id="foodQty" value="1" min="0" step="0.25" inputmode="decimal" />
@@ -61,6 +63,48 @@
           </label>
         </div>
         <button type="submit" class="primary" id="addBtn" disabled>Agregar</button>
+      </form>
+      <button type="button" id="toggleCustom" class="ghost toggle-custom">+ Ingresar alimento manualmente</button>
+      <form id="customFoodForm" hidden autocomplete="off">
+        <label>Nombre
+          <input type="text" id="cfName" placeholder="Ej: batido de proteína" />
+        </label>
+        <div class="row">
+          <label>kcal / 100 g
+            <input type="number" id="cfKcal" min="0" step="0.1" inputmode="decimal" />
+          </label>
+          <label>Proteína (g / 100 g)
+            <input type="number" id="cfProt" min="0" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+        <div class="row">
+          <label>Carbos (g / 100 g)
+            <input type="number" id="cfCarb" min="0" step="0.1" inputmode="decimal" />
+          </label>
+          <label>Grasa (g / 100 g)
+            <input type="number" id="cfFat" min="0" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+        <div class="row">
+          <label>Cantidad (g)
+            <input type="number" id="cfQty" min="0" step="1" inputmode="decimal" />
+          </label>
+          <label>Fibra (g, opcional)
+            <input type="number" id="cfFiber" min="0" step="0.1" inputmode="decimal" />
+          </label>
+        </div>
+        <details class="custom-extra">
+          <summary>Opcionales (azúcar, sodio)</summary>
+          <div class="row">
+            <label>Azúcar (g)
+              <input type="number" id="cfSugar" min="0" step="0.1" inputmode="decimal" />
+            </label>
+            <label>Sodio (mg)
+              <input type="number" id="cfSodium" min="0" step="1" inputmode="decimal" />
+            </label>
+          </div>
+        </details>
+        <button type="submit" class="primary">Agregar manual</button>
       </form>
 
       <h2>Comidas del día</h2>
