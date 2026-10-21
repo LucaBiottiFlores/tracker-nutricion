@@ -51,6 +51,7 @@ window.FOODS = [
   { n:"Porotos (cocidos)", cat:"Legumbres", kcal:127, prot:8.7, carb:22.8, fat:0.5, fiber:6.4, sugar:0.3, sodium:2, satfat:0.1, calcium:28, iron:2.9, potassium:400, vitc:0, u:{taza:170, porcion:200} },
   { n:"Lentejas (cocidas)", cat:"Legumbres", kcal:116, prot:9, carb:20, fat:0.4, fiber:7.9, sugar:1.8, sodium:2, satfat:0.1, calcium:19, iron:3.3, potassium:369, vitc:1.5, u:{taza:200, porcion:200} },
   { n:"Garbanzos (cocidos)", cat:"Legumbres", kcal:164, prot:8.9, carb:27, fat:2.6, fiber:7.6, sugar:4.8, sodium:7, satfat:0.3, calcium:49, iron:2.9, potassium:291, vitc:1.3, u:{taza:160, porcion:200} },
+  { n:"Habas (cocidas)", cat:"Legumbres", kcal:110, prot:7.6, carb:19.6, fat:0.4, fiber:5.4, sugar:1.8, sodium:5, satfat:0.1, calcium:36, iron:1.5, potassium:268, vitc:0.3, u:{taza:170, porcion:200} },
 
   // ---- Verduras ----
   { n:"Lechuga", cat:"Verduras", kcal:15, prot:1.4, carb:2.9, fat:0.2, fiber:1.3, sugar:0.8, sodium:28, satfat:0, calcium:36, iron:0.9, potassium:194, vitc:9.2, u:{taza:47, porcion:100} },
