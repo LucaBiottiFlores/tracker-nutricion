@@ -92,6 +92,7 @@ window.FOODS = [
   { n:"Betarraga (remolacha, cocida)", cat:"Verduras", kcal:44, prot:1.7, carb:10, fat:0.2, fiber:2, sugar:8, sodium:77, satfat:0, calcium:16, iron:0.8, potassium:305, vitc:3.6, u:{unidad:80, porcion:100} },
   { n:"Porotos verdes (cocidos)", cat:"Verduras", kcal:35, prot:1.9, carb:7.9, fat:0.3, fiber:3.2, sugar:3.6, sodium:1, satfat:0.1, calcium:44, iron:0.7, potassium:146, vitc:9.7, u:{taza:125, porcion:100} },
   { n:"Champiñones", cat:"Verduras", kcal:22, prot:3.1, carb:3.3, fat:0.3, fiber:1, sugar:2, sodium:5, satfat:0.1, calcium:3, iron:0.5, potassium:318, vitc:2.1, u:{taza:96, porcion:100} },
+  { n:"Verduras salteadas", cat:"Verduras", kcal:60, prot:1.5, carb:6, fat:3.5, fiber:2, sugar:2.5, sodium:200, satfat:0.5, calcium:30, iron:0.5, potassium:250, vitc:15, u:{porcion:100, taza:150} },
   { n:"Palta", cat:"Verduras", kcal:160, prot:2, carb:8.5, fat:14.7, fiber:6.7, sugar:0.7, sodium:7, satfat:2.1, calcium:12, iron:0.6, potassium:485, vitc:10, u:{unidad:150, porcion:100} },
 
   // ---- Frutas ----
@@ -130,6 +131,8 @@ window.FOODS = [
   { n:"Chocolate (barra, 60–70% cacao)", cat:"Otros", kcal:546, prot:4.9, carb:61, fat:31, fiber:7, sugar:48, sodium:24, satfat:19, calcium:56, iron:8, potassium:559, vitc:0, u:{porcion:25} },
   { n:"Helado (crema)", cat:"Otros", kcal:207, prot:3.5, carb:24, fat:11, fiber:0.7, sugar:21, sodium:80, satfat:6.8, calcium:128, iron:0.1, potassium:199, vitc:0.6, u:{taza:132, porcion:65} },
   { n:"Papas fritas", cat:"Otros", kcal:312, prot:3.4, carb:41, fat:15, fiber:3.8, sugar:0.3, sodium:210, satfat:2.3, calcium:9, iron:0.8, potassium:579, vitc:4.7, u:{porcion:100} },
+  { n:"Doritos de queso", cat:"Otros", kcal:500, prot:6, carb:58, fat:26, fiber:3.5, sugar:4, sodium:620, satfat:3.4, calcium:100, iron:1.5, potassium:220, vitc:0, u:{porcion:100, bolsa:170} },
+  { n:"Salsa golf", cat:"Otros", kcal:400, prot:1, carb:15, fat:38, fiber:0.3, sugar:11, sodium:550, satfat:6, calcium:15, iron:0.3, potassium:90, vitc:2, u:{cda:15, porcion:30} },
   { n:"Empanada de pino", cat:"Otros", kcal:250, prot:9, carb:28, fat:12, fiber:2, sugar:3, sodium:400, satfat:4, calcium:30, iron:1.8, potassium:200, vitc:2, u:{unidad:250, porcion:250} },
   { n:"Café / té (sin azúcar)", cat:"Otros", kcal:1, prot:0.1, carb:0, fat:0, fiber:0, sugar:0, sodium:2, satfat:0, calcium:2, iron:0, potassium:49, vitc:0, u:{taza:240, porcion:240} },
 
