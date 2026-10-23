@@ -21,6 +21,7 @@
 
   <nav class="tabs" role="tablist">
     <button type="button" class="tab active" data-tab="comidas">Comidas</button>
+    <button type="button" class="tab" data-tab="semana">Semana</button>
     <button type="button" class="tab" data-tab="cuerpo">Cuerpo</button>
     <button type="button" class="tab" data-tab="plan">Plan</button>
     <button type="button" class="tab" data-tab="ajustes">Ajustes</button>
@@ -110,6 +111,22 @@
       <h2>Comidas del día</h2>
       <ul id="entryList" class="entry-list"></ul>
       <p id="emptyEntry" class="empty">Aún no registras comidas este día.</p>
+    </section>
+
+    <!-- Tab: Semana -->
+    <section class="panel" data-panel="semana">
+      <h2>Balance semanal</h2>
+      <div class="week-card">
+        <div class="week-range" id="weekRange"></div>
+        <div class="week-big">
+          <span class="week-num" id="weekKcal">0</span>
+          <span class="week-sub" id="weekSub"></span>
+        </div>
+        <div class="week-chart" id="weekChart"></div>
+        <div class="week-verdict" id="weekVerdict"></div>
+        <div class="week-meta" id="weekMeta"></div>
+      </div>
+      <p class="hint">La grasa no se juega en un día suelto: se juega en el balance de la semana. Un día de más se compensa solo si el resto de la semana sigue cerca de tu meta.</p>
     </section>
 
     <!-- Tab: Cuerpo -->

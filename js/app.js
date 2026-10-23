@@ -119,6 +119,8 @@
     cfName: $("cfName"), cfKcal: $("cfKcal"), cfProt: $("cfProt"), cfCarb: $("cfCarb"), cfFat: $("cfFat"),
     cfQty: $("cfQty"), cfFiber: $("cfFiber"), cfSugar: $("cfSugar"), cfSodium: $("cfSodium"),
     entryList: $("entryList"), emptyEntry: $("emptyEntry"),
+    weekRange: $("weekRange"), weekKcal: $("weekKcal"), weekSub: $("weekSub"),
+    weekChart: $("weekChart"), weekVerdict: $("weekVerdict"), weekMeta: $("weekMeta"),
     bodyForm: $("bodyForm"), bodyWeight: $("bodyWeight"), bodyWaist: $("bodyWaist"), bodyNeck: $("bodyNeck"),
     bfNow: $("bfNow"), bodyList: $("bodyList"), emptyBody: $("emptyBody"),
     chartWrap: $("chartWrap"), weightChart: $("weightChart"), bfChart: $("bfChart"),
@@ -157,8 +159,7 @@
   }
 
   // ---- Totales del día ----
-  function dayTotals() {
-    var key = dateKey(selectedDate);
+  function totalsForKey(key) {
     var list = state.entries[key] || [];
     var t = { kcal: 0, prot: 0, carb: 0, fat: 0, fiber: 0, sugar: 0, sodium: 0, satfat: 0, calcium: 0, iron: 0, potassium: 0, vitc: 0 };
     list.forEach(function (e) {
@@ -176,6 +177,10 @@
       t.vitc += e.vitc || 0;
     });
     return t;
+  }
+
+  function dayTotals() {
+    return totalsForKey(dateKey(selectedDate));
   }
 
   function renderSummary() {
@@ -202,6 +207,112 @@
       html += "<li><span>" + label + "</span><b>" + shown + "</b></li>";
     });
     el.microList.innerHTML = html;
+  }
+
+  // ---- Balance semanal ----
+  function maintenanceKcal() {
+    var g = state.goal || "cut";
+    var k = state.targets.kcal || 2000;
+    if (g === "cut") return Math.round(k / 0.8);
+    if (g === "bulk") return Math.round(k / 1.1);
+    return Math.round(k);
+  }
+
+  function weekDays(anchor) {
+    var d = new Date(anchor);
+    var day = d.getDay();
+    var diff = day === 0 ? 6 : day - 1; // lunes = inicio de semana
+    var monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
+    var out = [];
+    for (var i = 0; i < 7; i++) out.push(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i));
+    return out;
+  }
+
+  function fmtRange(a, b) {
+    var meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    if (a.getMonth() === b.getMonth()) {
+      return a.getDate() + " — " + b.getDate() + " " + meses[b.getMonth()];
+    }
+    return a.getDate() + " " + meses[a.getMonth()] + " — " + b.getDate() + " " + meses[b.getMonth()];
+  }
+
+  function renderWeek() {
+    var days = weekDays(selectedDate);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var target = state.targets.kcal || 2000;
+    var maint = maintenanceKcal();
+    var dnames = ["L", "M", "X", "J", "V", "S", "D"];
+
+    var perDay = [];
+    var consumed = 0, maxDay = 0;
+    days.forEach(function (d, i) {
+      var kcal = totalsForKey(dateKey(d)).kcal;
+      perDay.push({ d: d, kcal: kcal, name: dnames[i] });
+      consumed += kcal;
+      if (kcal > maxDay) maxDay = kcal;
+    });
+
+    var todayKey = dateKey(today);
+    var isCurrent = dateKey(days[0]) <= todayKey && todayKey <= dateKey(days[6]);
+    var isFuture = dateKey(days[0]) > todayKey;
+    var elapsedDays = isCurrent ? days.filter(function (d) { return d <= today; }).length : 7;
+
+    var budget = target * elapsedDays;
+    var maintBudget = maint * elapsedDays;
+    var fullBudget = target * 7;
+    var fullMaint = maint * 7;
+
+    el.weekRange.textContent = "semana del " + fmtRange(days[0], days[6]) +
+      (isCurrent ? " · van " + elapsedDays + " de 7 días" : "");
+
+    el.weekKcal.textContent = Math.round(consumed);
+    el.weekSub.textContent = "/ " + Math.round(fullBudget) + " kcal semana";
+
+    // Gráfico de barras por día
+    var chartH = 96;
+    var scale = Math.max(target * 1.6, maint * 1.1, maxDay * 1.1, 1);
+    var targetY = chartH - (target / scale) * chartH;
+    var html = '<div class="week-bars"><div class="week-target-line" style="bottom:' + targetY.toFixed(1) + 'px"></div>';
+    perDay.forEach(function (p) {
+      var h = Math.max(0, Math.round((p.kcal / scale) * chartH));
+      var cls = "wbar";
+      if (p.d > today) cls += " future";
+      else if (p.kcal <= target) cls += " ok";
+      else if (p.kcal <= maint) cls += " over";
+      else cls += " bad";
+      html += '<div class="' + cls + '" style="height:' + h + 'px"></div>';
+    });
+    html += "</div>";
+    html += '<div class="week-labels">' + perDay.map(function (p) { return "<span>" + p.name + "</span>"; }).join("") + "</div>";
+    html += '<div class="week-kcals">' + perDay.map(function (p) { return "<span>" + (p.d > today ? "—" : Math.round(p.kcal)) + "</span>"; }).join("") + "</div>";
+    el.weekChart.innerHTML = html;
+
+    // Veredicto (semáforo)
+    var vHtml = "", vCls = "";
+    if (isFuture) {
+      vCls = "na";
+      vHtml = "Esta semana aún no comienza. Los días se irán pintando a medida que registres.";
+    } else if (consumed <= budget) {
+      vCls = "ok";
+      vHtml = "<b>Vas dentro del presupuesto.</b> A este ritmo bajas grasa a buen paso, y cualquier exceso puntual ya queda absorbido por el margen de la semana.";
+    } else if (consumed <= maintBudget) {
+      vCls = "warn";
+      var room = Math.round(maintBudget - consumed);
+      vHtml = "<b>Te pasaste del presupuesto, pero sigues bajo tu mantención.</b> Igual estás perdiendo grasa esta semana, solo más lento. Te quedan <b>" + room + " kcal</b> de margen antes de tocar mantención.";
+    } else {
+      vCls = "bad";
+      var over = Math.round(consumed - maintBudget);
+      vHtml = "<b>Estás por sobre mantención esta semana</b> (unos " + over + " kcal). Acá sí se pausa la pérdida. No es para castigarte: mañana vuelves a la pauta normal y la semana siguiente se equilibra.";
+    }
+    el.weekVerdict.className = "week-verdict " + vCls;
+    el.weekVerdict.innerHTML = vHtml;
+
+    var avg = elapsedDays > 0 ? consumed / elapsedDays : 0;
+    el.weekMeta.innerHTML =
+      '<div><span>Promedio</span><b>' + Math.round(avg) + '</b><small>kcal/día (meta ' + Math.round(target) + ")</small></div>" +
+      '<div><span>Presupuesto</span><b>' + Math.round(fullBudget) + '</b><small>kcal semana</small></div>' +
+      '<div><span>Mantención</span><b>' + Math.round(fullMaint) + '</b><small>kcal semana</small></div>';
   }
 
   // ---- Comidas ----
@@ -882,6 +993,7 @@
 
   function renderAll() {
     renderSummary();
+    renderWeek();
     renderEntries();
     renderBody();
     renderPlateau();

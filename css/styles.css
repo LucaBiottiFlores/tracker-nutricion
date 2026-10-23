@@ -329,3 +329,71 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 0;
 #customFoodForm { margin-top: 0.8rem; }
 .custom-extra { font-size: 0.8rem; color: var(--muted); margin: 0.2rem 0 0.8rem; }
 .custom-extra summary { cursor: pointer; font-weight: 600; color: var(--ink); margin-bottom: 0.6rem; }
+
+/* ---- Balance semanal ---- */
+.week-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.8rem;
+}
+.week-range { color: var(--muted); font-size: 0.82rem; margin-bottom: 0.6rem; }
+.week-big { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.week-num { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.week-sub { color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+
+.week-chart { margin-bottom: 1rem; }
+.week-bars {
+  position: relative;
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-end;
+  height: 96px;
+}
+.week-target-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed var(--muted);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.wbar { flex: 1; border-radius: 4px 4px 2px 2px; transition: height 0.25s ease, background 0.25s ease; }
+.wbar.ok { background: var(--accent); }
+.wbar.over { background: var(--warn); }
+.wbar.bad { background: var(--danger); }
+.wbar.future { background: var(--line); }
+.week-labels, .week-kcals { display: flex; gap: 0.4rem; margin-top: 0.3rem; }
+.week-labels span, .week-kcals span { flex: 1; text-align: center; font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.week-labels span { font-weight: 700; }
+
+.week-verdict {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.week-verdict b { font-weight: 700; }
+.week-verdict.ok { background: #f0fdf4; border-color: #bbf7d0; }
+.week-verdict.warn { background: #fefce8; border-color: #fde68a; }
+.week-verdict.bad { background: #fef2f2; border-color: #fecaca; }
+.week-verdict.na { background: #f7f8f4; color: var(--muted); }
+
+.week-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+.week-meta div {
+  background: #f7f8f4;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem;
+  text-align: center;
+}
+.week-meta span { display: block; color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.week-meta b { font-size: 1.05rem; }
+.week-meta small { display: block; color: var(--muted); font-size: 0.68rem; }
